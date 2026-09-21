@@ -54,6 +54,7 @@ La funzione (`supabase/functions/ai-tutor/index.ts`) gestisce sia la chat del Tu
 
 ```bash
 npm run start   # poi premi "i" (iOS), "a" (Android) o "w" (web) — richiede Expo Go o un simulatore
+npm run web     # anteprima rapida nel browser (utile per un primo giro senza simulatore)
 npm run typecheck
 ```
 
