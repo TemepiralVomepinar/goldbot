@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "ENGI AI",
+    "slug": "engi-ai-app",
+    "scheme": "engiai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ENGI AI usa la fotocamera per scansionare i tuoi esercizi."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ENGI AI accede alle tue foto per caricare esercizi e materiali."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.engiai.app"
+    },
+    "android": {
+      "package": "com.engiai.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
