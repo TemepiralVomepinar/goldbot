@@ -49,3 +49,11 @@ per diminuire: alza `MinGrade` a 2.
 Box viola/verdi di larghezza fissa (`WidthBars`, default 30), storico di `HistoryDays` sessioni, opacità per grado, box mitigati sbiaditi,
 media mobile EMA(20) verde se sale / viola se scende, pannello statistico. Per candele verdi/viola come nello screenshot usa i colori
 candela di ATAS (impostazioni del grafico). Funziona anche su barre Range (usa l'indice barra), ma i parametri in "barre" vanno ritarati.
+
+## 6. Come riconoscere le zone forti (aggiornamento)
+Ogni zona ha un **punteggio 0–100** = 60% persistenza del flusso (|z|, tetto 6) + 40% spostamento di prezzo in ATR (tetto 3).
+**A** ≥ 60 (box saturo, bordo spesso, etichetta "A 72 T0"), **B** ≥ 35 (medio), **C** < 35 (tenue, senza etichetta).
+Ogni tocco abbassa l'opacità; una zona mitigata (chiusura oltre il bordo lontano) diventa quasi trasparente.
+I pesi e le soglie sono ipotesi di progetto: la prova che A sia davvero più forte di C è il **pannello statistico** (tasso di bounce
+per grado). Servono almeno ~30 primi tocchi per grado prima di fidarsi; se A non batte nettamente C, il punteggio non ha valore.
+Per vedere solo le forti: `Min grade shown` = 2 o 3.

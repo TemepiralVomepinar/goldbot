@@ -21,7 +21,7 @@ namespace GoldBot.Atas
 		{
 			public int Id, OriginBar, ImpulseBar, Dir, Grade, Touches, MitBar = -1;   // Dir: +1 buy zone, -1 sell zone
 			public decimal Lo, Hi;
-			public double Z;
+			public double Z, Disp, Score;
 			public bool Armed = true, Mitigated;
 			public DateTime Day;
 		}
@@ -49,7 +49,8 @@ namespace GoldBot.Atas
 		[Display(Name = "Show moving average", GroupName = "Display")] public bool ShowMa { get; set; } = true;
 		[Display(Name = "MA period", GroupName = "Display")] public int MaPeriod { get; set; } = 20;
 		[Display(Name = "Show stats panel", GroupName = "Display")] public bool ShowPanel { get; set; } = true;
-		[Display(Name = "Show labels", GroupName = "Display")] public bool ShowLabels { get; set; }
+		[Display(Name = "Show labels", GroupName = "Display")] public bool ShowLabels { get; set; } = true;
+		[Display(Name = "Label min grade (2=B,3=A)", GroupName = "Display")] public int LabelMinGrade { get; set; } = 2;
 		[Display(Name = "Outcome horizon (bars)", GroupName = "Outcome")] public int HorizonBars { get; set; } = 10;
 		[Display(Name = "Outcome ATR k", GroupName = "Outcome")] public decimal OutcomeAtrK { get; set; } = 0.5m;
 
@@ -147,10 +148,13 @@ namespace GoldBot.Atas
 			if (_zones.Any(x => x.Dir == dir && x.Day == _sessionDate && !x.Mitigated &&
 				Math.Min(x.Hi, zHi) - Math.Max(x.Lo, zLo) > 0.5m * h)) return;       // no stacked duplicates
 
-			var grade = Math.Abs(z) >= 3 ? 3 : Math.Abs(z) >= 2 ? 2 : 1;
+			// strength score 0-100: flow persistence (60%) + displacement vs ATR (40%). Weights are design assumptions, validated only by the panel.
+			var disp = (double)(bestD / atrPrev);
+			var score = 100 * (0.6 * Math.Min(Math.Abs(z), 6) / 6 + 0.4 * Math.Min(disp, 3) / 3);
+			var grade = score >= 60 ? 3 : score >= 35 ? 2 : 1;
 			if (grade < MinGrade) return;
 
-			_zones.Add(new Fz { Id = _nextId++, OriginBar = oStart, ImpulseBar = b, Dir = dir, Grade = grade, Z = Math.Abs(z), Lo = zLo, Hi = zHi, Day = _sessionDate });
+			_zones.Add(new Fz { Id = _nextId++, OriginBar = oStart, ImpulseBar = b, Dir = dir, Grade = grade, Z = Math.Abs(z), Disp = disp, Score = score, Lo = zLo, Hi = zHi, Day = _sessionDate });
 			if (_zones.Count > MaxZones) _zones.RemoveAt(0);
 		}
 
@@ -219,12 +223,13 @@ namespace GoldBot.Atas
 				var yTop = ChartInfo.GetYByPrice(z.Hi);                                  // VERIFY
 				var yBot = ChartInfo.GetYByPrice(z.Lo);
 				var baseCol = z.Dir > 0 ? Color.FromArgb(40, 170, 80) : Color.FromArgb(110, 50, 190);   // green buy / purple sell
-				var alpha = (z.Grade == 3 ? 95 : z.Grade == 2 ? 70 : 48) - 10 * Math.Min(z.Touches, 3);
-				if (z.Mitigated) alpha = 22;
+				var alpha = (z.Grade == 3 ? 140 : z.Grade == 2 ? 85 : 35) - 12 * Math.Min(z.Touches, 3);   // A strong, C faint, fades with each touch
+				if (z.Mitigated) alpha = 20;
 				var rect = new Rectangle(x1, yTop, Math.Max(x2 - x1, 3), Math.Max(yBot - yTop, 2));
 				context.FillRectangle(Color.FromArgb(Math.Max(alpha, 15), baseCol), rect);
-				context.DrawRectangle(new RenderPen(Color.FromArgb(Math.Max(alpha + 40, 40), baseCol), 1), rect);   // VERIFY
-				if (ShowLabels) context.DrawString($"{"CBA"[z.Grade - 1]} {z.Z:F1}z T{z.Touches}", font, Color.Gainsboro, x1 + 2, yTop - 12);
+				context.DrawRectangle(new RenderPen(Color.FromArgb(Math.Min(Math.Max(alpha + 60, 50), 255), baseCol), z.Grade == 3 ? 3 : z.Grade == 2 ? 2 : 1), rect);   // VERIFY
+				if (ShowLabels && z.Grade >= LabelMinGrade && !z.Mitigated)
+					context.DrawString($"{"CBA"[z.Grade - 1]} {z.Score:F0}  T{z.Touches}", font, Color.White, x1 + 3, yTop + 2);
 			}
 
 			if (ShowMa)
