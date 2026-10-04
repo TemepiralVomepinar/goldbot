@@ -44,6 +44,7 @@ namespace GoldBot.Atas
 		[Display(Name = "Zone width (bars)", GroupName = "Display")] public int WidthBars { get; set; } = 30;
 		[Display(Name = "Extend until mitigated", GroupName = "Display")] public bool ExtendUntilMitigated { get; set; }
 		[Display(Name = "History (sessions shown)", GroupName = "Display")] public int HistoryDays { get; set; } = 5;
+		[Display(Name = "Max bars drawn (performance)", GroupName = "Display")] public int MaxDrawBars { get; set; } = 4000;
 		[Display(Name = "Max zones kept", GroupName = "Display")] public int MaxZones { get; set; } = 400;
 		[Display(Name = "Show moving average", GroupName = "Display")] public bool ShowMa { get; set; } = true;
 		[Display(Name = "MA period", GroupName = "Display")] public int MaPeriod { get; set; } = 20;
@@ -190,8 +191,8 @@ namespace GoldBot.Atas
 		protected override void OnRender(RenderContext context, DrawingLayouts layout)   // VERIFY signature
 		{
 			if (layout != DrawingLayouts.Final) return;                                  // VERIFY enum member
-			var first = Math.Max(ChartInfo.FirstVisibleBarNumber, 0);                    // VERIFY
-			var last = ChartInfo.LastVisibleBarNumber;                                   // VERIFY
+			var last = _lastBar;                                                         // no visible-range API: draw recent bars, skip off-screen by X
+			var first = Math.Max(last - MaxDrawBars, 0);
 			var font = new RenderFont("Arial", 9);
 
 			var shown = _zones.Select(z => z.Day).Distinct().OrderByDescending(d => d).Take(Math.Max(HistoryDays, 1)).ToHashSet();
@@ -201,8 +202,9 @@ namespace GoldBot.Atas
 				var end = ExtendUntilMitigated ? (z.MitBar >= 0 ? z.MitBar : _lastBar) : Math.Min(z.OriginBar + WidthBars, _lastBar);
 				if (end < first || z.OriginBar > last) continue;
 
-				var x1 = ChartInfo.GetXByBar(z.OriginBar);                               // VERIFY
+				var x1 = ChartInfo.GetXByBar(z.OriginBar);
 				var x2 = ChartInfo.GetXByBar(end);
+				if (x2 < -50 || x1 > 20000) continue;                                    // off-screen
 				var yTop = ChartInfo.GetYByPrice(z.Hi);                                  // VERIFY
 				var yBot = ChartInfo.GetYByPrice(z.Lo);
 				var baseCol = z.Dir > 0 ? Color.FromArgb(40, 170, 80) : Color.FromArgb(110, 50, 190);   // green buy / purple sell
@@ -219,8 +221,10 @@ namespace GoldBot.Atas
 				for (var i = Math.Max(first, 1); i <= last; i++)
 				{
 					if (!_ma.TryGetValue(i, out var v1) || !_ma.TryGetValue(i - 1, out var v0)) continue;
+					var xa = ChartInfo.GetXByBar(i - 1); var xb = ChartInfo.GetXByBar(i);
+					if (xb < -50 || xa > 20000) continue;
 					var col = v1 >= v0 ? Color.FromArgb(120, 230, 60) : Color.FromArgb(150, 90, 210);
-					context.DrawLine(new RenderPen(col, 2), ChartInfo.GetXByBar(i - 1), ChartInfo.GetYByPrice(v0), ChartInfo.GetXByBar(i), ChartInfo.GetYByPrice(v1));   // VERIFY
+					context.DrawLine(new RenderPen(col, 2), xa, ChartInfo.GetYByPrice(v0), xb, ChartInfo.GetYByPrice(v1));   // VERIFY
 				}
 			}
 
