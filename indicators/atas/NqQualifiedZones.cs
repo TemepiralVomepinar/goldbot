@@ -58,7 +58,11 @@ namespace GoldBot.Atas
 		private decimal _atr;
 		private const decimal AtrAlpha = 2m / 15m;
 
-		public NqQualifiedZones() : base(true) { DenyToChangePanel = true; }
+		public NqQualifiedZones() : base(true)
+		{
+			DenyToChangePanel = true;
+			Panel = IndicatorDataProvider.CandlesPanel;   // VERIFY: draw on the price panel
+		}
 
 		protected override void OnCalculate(int bar, decimal value)
 		{
