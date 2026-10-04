@@ -64,6 +64,9 @@ namespace GoldBot.Atas
 		private int _lastProcessed = -1, _lastBar, _sessionFirstBar, _nextId = 1;
 		private DateTime _sessionDate = DateTime.MinValue;
 		private TimeZoneInfo _ny;
+		private readonly Dictionary<DrawingLayouts, int> _layoutCalls = new();
+		private string _lastTimes = "-";
+		private int _inSessionBars;
 
 		public NqPotenziato() : base(true)
 		{
@@ -83,6 +86,7 @@ namespace GoldBot.Atas
 
 			DateTime day;
 			if (OnlyNySession) { if (!TryNySession(c.Time, out day)) return; } else day = c.Time.Date;
+			_inSessionBars++;
 			if (day != _sessionDate) NewSession(day, b);
 
 			double delta = 0;
@@ -190,7 +194,11 @@ namespace GoldBot.Atas
 		// ---------- rendering ----------
 		protected override void OnRender(RenderContext context, DrawingLayouts layout)   // VERIFY signature
 		{
-			if (layout != DrawingLayouts.Final) return;                                  // VERIFY enum member
+			_layoutCalls[layout] = _layoutCalls.TryGetValue(layout, out var n0) ? n0 + 1 : 1;
+			var statusFont = new RenderFont("Arial", 9);
+			context.DrawString($"NQ Potenziato | bars={_lastBar} processed={_lastProcessed} inSession={_inSessionBars} zones={_zones.Count} | {_lastTimes} | layouts: {string.Join(",", _layoutCalls.Select(k => k.Key + "=" + k.Value))}",
+				statusFont, Color.Gold, 70, 20);                                         // always-on diagnostic line
+			if (layout != _layoutCalls.Keys.Max()) return;                               // draw once per frame, on the highest layout seen (Final)
 			var last = _lastBar;                                                         // no visible-range API: draw recent bars, skip off-screen by X
 			var first = Math.Max(last - MaxDrawBars, 0);
 			var font = new RenderFont("Arial", 9);
@@ -265,6 +273,7 @@ namespace GoldBot.Atas
 		{
 			_ny ??= FindNy();
 			var ny = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(t.AddHours(-ChartTimeOffsetHours), DateTimeKind.Utc), _ny);
+			_lastTimes = $"candle={t:HH:mm} -> NY={ny:HH:mm}";
 			day = ny.Date;
 			var tod = ny.TimeOfDay;
 			return tod >= new TimeSpan(9, 30, 0) && tod < new TimeSpan(16, 0, 0);
