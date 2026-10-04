@@ -27,6 +27,7 @@ namespace GoldBot.Atas
 			public bool Armed = true, Round;
 			public ZState State = ZState.Qualified;
 			public int LastBar;
+			public DateTime Day;
 		}
 
 		private sealed class Pending { public Zone Z; public int StartBar, TouchIdx; public int ApproachDir; public decimal Atr0; }
@@ -144,7 +145,7 @@ namespace GoldBot.Atas
 			foreach (var c in sorted.Take(kMax + 1))
 			{
 				var price = lo + c.i * tick;
-				if (_zones.Any(z => z.State != ZState.Expired && price >= z.Lo && price <= z.Hi)) continue;
+				if (_zones.Any(z => z.Day == _sessionDate && price >= z.Lo - 4 * tick && price <= z.Hi + 4 * tick)) continue; // also blocks re-creation of expired zones
 
 				int l = c.i, u = c.i;                              // extend while smoothed >= 50% of peak, max 12 ticks
 				while (l > 0 && sm[l - 1] >= 0.5 * sm[c.i] && c.i - l < 12) l--;
@@ -156,7 +157,7 @@ namespace GoldBot.Atas
 
 				var zone = new Zone
 				{
-					Id = _nextId++, FormBar = bar, LastBar = bar, Lo = lo + l * tick, Hi = lo + u * tick,
+					Id = _nextId++, Day = _sessionDate, FormBar = bar, LastBar = bar, Lo = lo + l * tick, Hi = lo + u * tick,
 					MassV = (decimal)vz, ZI = (decimal)zi, Dir = Math.Sign(dz), Med0 = med, Mad0 = mad,
 					ZV0 = (decimal)c.z, PBH = c.p, PeakSm = sm[c.i], Round = NearRound(price, tick)
 				};
