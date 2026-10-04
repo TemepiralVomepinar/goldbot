@@ -1,6 +1,6 @@
 # NQ Flow Zones — zone "origine dell'impulso" con storico (mappa statistica, nessun entry/exit)
 
-File: `indicators/atas/NqFlowZones.cs` (indicatore: **NQ Flow Zones (history + grades)**).
+File: `indicators/atas/NqPotenziato.cs` (indicatore: **NQ Potenziato**).
 Convive con `NqQualifiedZones` (più selettivo, con controllo FDR): questo è la versione **più frequente**, con grafica a box e storico.
 
 > **Cosa è dedotto e cosa no.** La logica interna di Deepcharts è proprietaria e non la conosco. Dallo screenshot ho preso solo lo

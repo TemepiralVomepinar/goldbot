@@ -1,5 +1,5 @@
 // NQ Flow Zones — origin-of-impulse zones with history, grades and a measured hit-rate panel.
-// Statistical reference map only: NO entry/exit logic. Spec: docs/NQ_FLOW_ZONES_SPEC.md
+// Statistical reference map only: NO entry/exit logic. Spec: docs/NQ_POTENZIATO_SPEC.md
 // NOT compiled against the ATAS SDK. Lines marked "VERIFY" depend on the exact SDK version.
 namespace GoldBot.Atas
 {
@@ -14,8 +14,8 @@ namespace GoldBot.Atas
 	using OFT.Rendering.Context;
 	using OFT.Rendering.Tools;
 
-	[DisplayName("NQ Flow Zones (history + grades)")]
-	public class NqFlowZones : Indicator
+	[DisplayName("NQ Potenziato")]
+	public class NqPotenziato : Indicator
 	{
 		private sealed class Fz
 		{
@@ -64,7 +64,7 @@ namespace GoldBot.Atas
 		private DateTime _sessionDate = DateTime.MinValue;
 		private TimeZoneInfo _ny;
 
-		public NqFlowZones() : base(true)
+		public NqPotenziato() : base(true)
 		{
 			DenyToChangePanel = true;
 			Panel = IndicatorDataProvider.CandlesPanel;                                  // VERIFY: draw on the price panel
