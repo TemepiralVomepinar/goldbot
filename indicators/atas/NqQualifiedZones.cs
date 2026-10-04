@@ -62,6 +62,8 @@ namespace GoldBot.Atas
 		{
 			DenyToChangePanel = true;
 			Panel = IndicatorDataProvider.CandlesPanel;   // VERIFY: draw on the price panel
+			EnableCustomDrawing = true;                                                  // without this OnRender is never called
+			SubscribeToDrawingEvents(DrawingLayouts.Final);
 		}
 
 		protected override void OnCalculate(int bar, decimal value)
@@ -231,6 +233,7 @@ namespace GoldBot.Atas
 		// ---------- rendering ----------
 		protected override void OnRender(RenderContext context, DrawingLayouts layout)   // VERIFY signature
 		{
+			if (ChartInfo is null || InstrumentInfo is null) return;
 			if (layout != DrawingLayouts.Final) return;                                  // VERIFY enum member
 			var font = new RenderFont("Arial", 9);
 			foreach (var z in _zones)

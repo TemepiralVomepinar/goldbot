@@ -72,6 +72,8 @@ namespace GoldBot.Atas
 		{
 			DenyToChangePanel = true;
 			Panel = IndicatorDataProvider.CandlesPanel;                                  // VERIFY: draw on the price panel
+			EnableCustomDrawing = true;                                                  // without this OnRender is never called
+			SubscribeToDrawingEvents(DrawingLayouts.Final);
 		}
 
 		protected override void OnCalculate(int bar, decimal value)
@@ -194,6 +196,7 @@ namespace GoldBot.Atas
 		// ---------- rendering ----------
 		protected override void OnRender(RenderContext context, DrawingLayouts layout)   // VERIFY signature
 		{
+			if (ChartInfo is null || InstrumentInfo is null) return;
 			_layoutCalls[layout] = _layoutCalls.TryGetValue(layout, out var n0) ? n0 + 1 : 1;
 			var statusFont = new RenderFont("Arial", 9);
 			context.DrawString($"NQ Potenziato | bars={_lastBar} processed={_lastProcessed} inSession={_inSessionBars} zones={_zones.Count} | {_lastTimes} | layouts: {string.Join(",", _layoutCalls.Select(k => k.Key + "=" + k.Value))}",
