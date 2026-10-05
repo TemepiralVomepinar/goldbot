@@ -11,7 +11,7 @@
 //|   filters. NOT backtested by the author: test before use.         |
 //+------------------------------------------------------------------+
 #property copyright "goldbot"
-#property version   "1.00"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -22,6 +22,7 @@ input int    InpOpenMin             = 30;
 input int    InpCloseHour           = 23;     // US cash close hour on server clock (23:00)
 input int    InpCloseMin            = 0;
 input int    InpFlatMinBeforeClose  = 5;      // flatten this many minutes before the close
+input int    InpDecisionStepMin     = 5;      // decision grid: 5 = every 5 minutes (paper: 30)
 input int    InpFirstDecisionMin    = 30;     // first decision N minutes after the open
 input int    InpLastDecisionMin     = 360;    // no new entries after this many minutes from the open
 
@@ -30,8 +31,14 @@ input int    InpLookback            = 14;     // days for the noise area and the
 input double InpVolMult             = 1.0;    // noise-area multiplier (paper base 1.0; best in hindsight ~1.5)
 input bool   InpAllowLong           = true;
 input bool   InpAllowShort          = true;
+input int    InpMaxTradesPerDay     = 6;      // cap on entries per session (costs grow with every trade)
+input int    InpReentryCooldownMin  = 10;     // minutes to wait after a strategy exit before a new entry
 
-input group "=== Position sizing / risk ==="
+enum ENUM_RISK_MODE { MODE_CUSTOM = 0, MODE_SAFE = 1, MODE_FAST = 2 };
+input group "=== Risk preset ==="
+input ENUM_RISK_MODE InpMode        = MODE_FAST;   // SAFE / FAST override the 5 risk inputs below; CUSTOM uses them as typed
+
+input group "=== Position sizing / risk (used when mode = CUSTOM) ==="
 input double InpRiskPerTradePct     = 0.50;   // max loss at the hard SL, % of equity
 input double InpTargetDailyVolPct   = 0.80;   // paper-style volatility targeting (daily vol of the position)
 input double InpMaxLeverage         = 3.0;    // cap on notional / equity
@@ -61,10 +68,12 @@ input string InpComment             = "NAM";
 
 CTrade   trade;
 datetime g_lastBar = 0, g_sessDay = 0, g_openTime = 0, g_vwapUpTo = 0;
-double   g_open = 0, g_prevClose = 0, g_dailyVol = 0, g_sig[16];
+double   g_open = 0, g_prevClose = 0, g_dailyVol = 0, g_sig[100];
 double   g_sumPV = 0, g_sumV = 0, g_dayRef = 0, g_initBal = 0;
 bool     g_ready = false, g_haltDay = false, g_haltAll = false;
-int      g_dayKey = -1;
+int      g_dayKey = -1, g_tradesToday = 0;
+datetime g_lastExit = 0;
+double   g_risk, g_volT, g_maxLev, g_softDaily, g_softMax;
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -75,6 +84,12 @@ int OnInit()
    trade.SetTypeFillingBySymbol(_Symbol);
    g_initBal = (InpInitialBalance > 0) ? InpInitialBalance : AccountInfoDouble(ACCOUNT_BALANCE);
    ArrayInitialize(g_sig, 0.0);
+   g_risk = InpRiskPerTradePct; g_volT = InpTargetDailyVolPct; g_maxLev = InpMaxLeverage;
+   g_softDaily = InpSoftDailyLossPct; g_softMax = InpSoftMaxLossPct;
+   if(InpMode == MODE_SAFE) { g_risk = 0.40; g_volT = 0.80; g_maxLev = 3.0; g_softDaily = 2.5; g_softMax = 6.5; }
+   if(InpMode == MODE_FAST) { g_risk = 1.00; g_volT = 1.60; g_maxLev = 4.0; g_softDaily = 3.2; g_softMax = 7.5; }
+   Print("NAM mode ", EnumToString(InpMode), ": risk/trade ", g_risk, "%, vol target ", g_volT, "%, max lev ", g_maxLev,
+         ", soft daily ", g_softDaily, "%, soft max ", g_softMax, "%");
    Print("NAM started on ", _Symbol, " initial balance ", DoubleToString(g_initBal, 2),
          ". Session on server clock ", InpOpenHour, ":", InpOpenMin, " - ", InpCloseHour, ":", InpCloseMin);
    return INIT_SUCCEEDED;
@@ -102,9 +117,9 @@ void Guards()
    if(key != g_dayKey) { g_dayKey = key; g_dayRef = MathMax(eq, bal); g_haltDay = false; }
    if(g_haltAll) return;
 
-   if(!g_haltDay && eq <= g_dayRef * (1.0 - InpSoftDailyLossPct / 100.0))
+   if(!g_haltDay && eq <= g_dayRef * (1.0 - g_softDaily / 100.0))
    { CloseAll("daily soft loss limit"); g_haltDay = true; }
-   if(eq <= g_initBal * (1.0 - InpSoftMaxLossPct / 100.0))
+   if(eq <= g_initBal * (1.0 - g_softMax / 100.0))
    { CloseAll("max soft loss limit"); g_haltAll = true; }
    if(InpTargetPct > 0 && eq >= g_initBal * (1.0 + InpTargetPct / 100.0))
    { CloseAll("profit target reached"); g_haltAll = true; }
@@ -120,7 +135,7 @@ void OnNewBar(datetime bt)
    int openSec = InpOpenHour * 3600 + InpOpenMin * 60;
    int closeSec = InpCloseHour * 3600 + InpCloseMin * 60;
 
-   if(day != g_sessDay) { g_sessDay = day; g_ready = false; g_open = 0; g_sumPV = 0; g_sumV = 0; g_vwapUpTo = 0; }
+   if(day != g_sessDay) { g_sessDay = day; g_ready = false; g_open = 0; g_sumPV = 0; g_sumV = 0; g_vwapUpTo = 0; g_tradesToday = 0; g_lastExit = 0; }
 
    if(tod < openSec || tod >= closeSec)
    {
@@ -155,8 +170,9 @@ void OnNewBar(datetime bt)
    if(!g_ready || g_haltDay || g_haltAll) { ShowState(0, 0, 0); return; }
 
    int off = tod - openSec;
-   if(off < InpFirstDecisionMin * 60 || off % 1800 != 0) return;
-   Decide(bt, off / 1800, off);
+   int stepSec = MathMax(InpDecisionStepMin, 1) * 60;
+   if(off < InpFirstDecisionMin * 60 || off % stepSec != 0) return;
+   Decide(bt, off / stepSec, off);
 }
 
 void AddBarToVwap(int shift)
@@ -173,9 +189,10 @@ void AddBarToVwap(int shift)
 //+------------------------------------------------------------------+
 bool ComputeStats(datetime day, int openSec, int closeSec)
 {
-   int slots = (closeSec - openSec) / 1800;
-   if(slots > 15) slots = 15;
-   double sumMove[16];
+   int stepSec = MathMax(InpDecisionStepMin, 1) * 60;
+   int slots = (closeSec - openSec) / stepSec;
+   if(slots > 99) slots = 99;
+   double sumMove[100];
    ArrayInitialize(sumMove, 0.0);
    double closes[];
    ArrayResize(closes, 0);
@@ -189,13 +206,13 @@ bool ComputeStats(datetime day, int openSec, int closeSec)
       double opx = iOpen(_Symbol, PERIOD_M1, sho);
       if(opx <= 0) continue;
 
-      double mv[16];
+      double mv[100];
       ArrayInitialize(mv, 0.0);
       bool ok = true;
       double cl = 0;
       for(int j = 1; j <= slots; j++)
       {
-         int sh = iBarShift(_Symbol, PERIOD_M1, ot + (datetime)(j * 1800 - 60), true);   // bar that ends at slot time
+         int sh = iBarShift(_Symbol, PERIOD_M1, ot + (datetime)(j * stepSec - 60), true);   // bar that ends at slot time
          if(sh < 0) { ok = false; break; }
          double px = iClose(_Symbol, PERIOD_M1, sh);
          mv[j] = MathAbs(px / opx - 1.0);
@@ -243,12 +260,14 @@ void Decide(datetime bt, int slot, int offSec)
    ulong tk; long type;
    if(GetPos(tk, type))
    {
-      if(type == POSITION_TYPE_BUY)  { if(P < MathMax(up, vwap)) CloseAll("long stop (band/VWAP)"); }
-      else                           { if(P > MathMin(lo, vwap)) CloseAll("short stop (band/VWAP)"); }
+      if(type == POSITION_TYPE_BUY)  { if(P < MathMax(up, vwap)) { CloseAll("long stop (band/VWAP)"); g_lastExit = bt; } }
+      else                           { if(P > MathMin(lo, vwap)) { CloseAll("short stop (band/VWAP)"); g_lastExit = bt; } }
       if(HasPos()) return;
    }
 
    if(offSec > InpLastDecisionMin * 60) return;
+   if(g_tradesToday >= InpMaxTradesPerDay) return;
+   if(g_lastExit > 0 && bt - g_lastExit < (datetime)(InpReentryCooldownMin * 60)) return;
    if(InpUseNewsFilter && NewsBlocked(bt)) return;
    if(InpMaxSpreadPoints > 0 && SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) > InpMaxSpreadPoints) return;
 
@@ -275,9 +294,9 @@ void Enter(bool isBuy, double P, double stopLevel)
    double pv = tv / ts;                                          // account currency per 1.0 price unit per lot
 
    double eq = AccountInfoDouble(ACCOUNT_EQUITY);
-   double lev = MathMin(InpMaxLeverage, (InpTargetDailyVolPct / 100.0) / MathMax(g_dailyVol, 1e-6));
+   double lev = MathMin(g_maxLev, (g_volT / 100.0) / MathMax(g_dailyVol, 1e-6));
    double lotsVol = eq * lev / (px * pv);
-   double lotsRisk = eq * InpRiskPerTradePct / 100.0 / (D * pv);
+   double lotsRisk = eq * g_risk / 100.0 / (D * pv);
    double lots = NormVol(MathMin(lotsVol, lotsRisk));
    if(lots <= 0) { Print("NAM: skip, size below the minimum lot"); return; }
 
@@ -293,6 +312,7 @@ void Enter(bool isBuy, double P, double stopLevel)
    if(lots <= 0) { Print("NAM: skip, not enough free margin"); return; }
 
    bool ok = isBuy ? trade.Buy(lots, _Symbol, 0.0, sl, 0.0, InpComment) : trade.Sell(lots, _Symbol, 0.0, sl, 0.0, InpComment);
+   if(ok) g_tradesToday++;
    Print("NAM ", (isBuy ? "BUY " : "SELL "), DoubleToString(lots, 2), " @", DoubleToString(px, _Digits), " SL ", DoubleToString(sl, _Digits),
          " lev ", DoubleToString(lev, 2), " dailyVol ", DoubleToString(g_dailyVol * 100, 2), "% -> ", (ok ? "ok" : "FAILED ") ,
          (ok ? "" : IntegerToString(trade.ResultRetcode())));

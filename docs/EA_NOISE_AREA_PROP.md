@@ -47,3 +47,20 @@ Stima grezza del margine: nel paper il guadagno medio per operazione è ~0,09 $ 
 
 ## 6. Regole GFT da verificare (non pubbliche o non verificate da me)
 Perdita giornaliera su saldo o equity e a che ora si azzera (`InpDayResetHour`); perdita massima fissa o trailing; EA ammessi; limite lotti; slippage; blocco news (secondo siti terzi: profitto entro ±2 minuti da news ad alto impatto limitato all'1%, da confermare sul sito GFT).
+
+## 7. Versione 1.10: decisioni a 5 minuti, più operazioni al giorno, preset di rischio
+- `InpDecisionStepMin = 5`: il Noise Area viene calcolato e valutato ogni 5 minuti (il paper usa 30). Entra e esce ogni 5 minuti, con massimo `InpMaxTradesPerDay = 6` ingressi e 10 minuti di attesa dopo un'uscita (`InpReentryCooldownMin`) per limitare le oscillazioni attorno alla banda.
+- `InpMode`: **SAFE** (rischio 0,4% a operazione, volatilità giornaliera ~0,8%, blocco giornaliero −2,5%, totale −6,5%), **FAST** (1,0%, ~1,6%, −3,2%, −7,5%), **CUSTOM** (usa i parametri scritti a mano). Default FAST, come hai chiesto.
+- **L'evidenza sui 5 minuti è la più debole.** Il paper di Zarattini decide ogni 30 minuti (1,8 operazioni al giorno). Fetna trova che i segnali a 5 minuti di tipo opening-range sono la finestra peggiore e che nessuna delle 225 varianti sopravvive a 25 $ di costo; Mesfin trova che i segnali OHLCV a 5 minuti su MNQ falliscono fuori campione e che 11 famiglie su 14 hanno un guadagno lordo sotto i 2 punti di attrito. Con più operazioni, i costi (spread, slippage, commissioni) pesano di più: se il test mostra che il risultato sparisce, prova `InpDecisionStepMin = 15` o `30`.
+
+### Probabilità di passare i due step con i preset (simulazione, non backtest)
+| preset | Sharpe supposto | volatilità giornaliera | passa fase 1 | passa entrambe | giorni mediani |
+|---|---|---|---|---|---|
+| SAFE | 1,0 | 0,8% | 71% | 47% | 128 |
+| SAFE | 1,3 | 0,8% | 75% | 56% | 125 |
+| FAST | 1,0 | 1,6% | 48% | 26% | 35 |
+| FAST | 1,3 | 1,6% | 51% | 30% | 36 |
+| FAST | 0,5 | 1,6% | 42% | 21% | 36 |
+| FAST | 0 (nessun edge) | 1,6% | 35% | 16% | 38 |
+
+Due conclusioni: (1) **veloce e probabile non vanno insieme**: FAST impiega circa 35 giorni ma passa una volta su 4; SAFE passa una volta su 2 ma impiega mesi. (2) **Con zero edge si passa comunque nel 16–19% dei casi** (se la prop non ha un limite di tempo, come ho assunto), quindi aver passato una challenge non prova che la strategia funzioni.
