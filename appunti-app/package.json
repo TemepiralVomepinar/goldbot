@@ -1,0 +1,13 @@
+{
+  "name": "appunti-app",
+  "version": "1.0.0",
+  "description": "App web per consultare, scrivere e generare appunti (Markdown su disco, nessuna dipendenza).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

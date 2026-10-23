@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appunti</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside id="sidebar">
+      <header class="side-head">
+        <h1>Appunti</h1>
+        <button id="btn-new" class="primary">+ Nuovo</button>
+      </header>
+      <input id="search" type="search" placeholder="Cerca negli appunti…" autocomplete="off">
+      <select id="subject-filter"><option value="">Tutte le materie</option></select>
+      <form id="gen-form" class="gen" hidden>
+        <label for="gen-prompt">Genera con l'AI</label>
+        <textarea id="gen-prompt" rows="3" placeholder="Es. Spiegami il teorema di Thevenin con un esempio"></textarea>
+        <button id="gen-btn" class="primary" type="submit">Genera appunto</button>
+      </form>
+      <ul id="list"></ul>
+    </aside>
+    <main id="main">
+      <button id="btn-back" class="ghost">← Elenco</button>
+      <div id="view" class="empty">Seleziona un appunto oppure creane uno nuovo.</div>
+    </main>
+  </div>
+  <div id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
