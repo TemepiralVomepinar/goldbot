@@ -9,6 +9,7 @@
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--text); font: 16px/1.6 -apple-system, system-ui, "Segoe UI", sans-serif; }
 .layout { display: grid; grid-template-columns: 340px 1fr; height: 100%; }
