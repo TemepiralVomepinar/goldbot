@@ -1,0 +1,59 @@
+PROGRAMMI PYTHON PER CASIO fx-CG50 - ANALISI E GEOMETRIA 1 (prima prova)
+========================================================================
+
+FILE (copiali tutti nella calcolatrice):
+  studio.py   studio numerico di funzione: dominio, zeri/segno, f' f'' tangente,
+              estremi e monotonia, flessi, LIMITI + ASINTOTI, non derivabilita'
+              (angoloso/cuspide/tg verticale), min/max/immagine, n. soluzioni
+              f(x)=c, GRAFICO a colori
+  limiti.py   limiti di funzioni e successioni, limite con parametro ("per quale
+              a il limite vale 3?"), ordine di infinitesimo, soglia di a in
+              N(x)/D(x)^a, ricorrenze a(n+1)=g(a_n), rapporto/radice
+  compl.py    numeri complessi: modulo/arg/forma esponenziale, De Moivre, radici
+              n-esime, az^2+bz+c, EQUAZIONI in z (con conj, abs, re, im),
+              REGIONI del piano di Gauss (mappa a caratteri)
+  estremi.py  sup/inf/max/min di {a_n}, insiemi da disuguaglianze, soluzioni di
+              g(x)=0, max/min di f su [a,b], test per induzione, famiglie di
+              intervalli (unione/intersezione)
+  taylor.py   derivate numeriche, classificazione di un punto critico (ordine del
+              primo termine non nullo), polinomio di Taylor, T_n + resto di Lagrange
+  teoria.py   formulario: derivate, limiti notevoli, infiniti, schema di studio,
+              complessi, teoremi (Fermat, Lagrange, zeri...), Taylor, integrali,
+              EDO, curve/geometria, sup/inf/induzione
+
+COME INSTALLARLI
+  1. Collega la fx-CG50 al PC con il cavo USB e scegli "Memoria di massa" (F1).
+  2. Copia i file .py nella cartella principale della calcolatrice.
+  3. Sulla calcolatrice: MENU > Python > scegli il file > F1 (Esegui).
+  (In alternativa: Casio fx-CG50 > "Python" > "Nuovo" e incolla il testo.)
+
+COME SI SCRIVONO LE FUNZIONI
+  x*exp(-x)        sqrt(x**2-1)/(x-2)       ln(x)/x
+  ^ oppure **      potenza            sen, cos, tg, arctg, ln, exp, abs()
+  cbrt(x)          radice cubica REALE (non usare (...)**(1/3) con basi negative)
+  factorial(n)     n!        pi, e        (successioni: variabile n; limiti: x)
+  Complessi: z, i, conj(z), abs(z), re(z), im(z), arg(z), arg2(z)=arg in [0,2pi)
+  Es.  z**2-2*i*conj(z)      abs(z-1)-conj(z)+i      z**8-(2+i)**4
+  Regioni: 1<=abs(z)<=2 and 0<=arg(z)<=pi/3
+  Condizioni su x: x**2-2*x-3<0 and abs(x)>=1
+
+COME USARLI NELLA PRIMA PROVA
+  Estremi/induzione ........ estremi.py (opz. 1,2,5,6)    teoria.py
+  Complessi ................ compl.py (opz. 1-6)
+  Funzioni, dominio ........ studio.py (opz. 2)
+  Successioni e limiti ..... limiti.py (opz. 1-9)
+  Continuita'/derivabilita'  studio.py (opz. 8: non derivabilita')
+  Parametri a,b ............ limiti.py (opz. 8), studio.py (opz. 8 a mano)
+  Taylor/punti critici ..... taylor.py (opz. 2,3,4)
+  STUDIO DI FUNZIONE ....... studio.py: 2 dominio, 3 zeri e segno, 7 limiti e
+                             asintoti, 5 estremi, 6 flessi, 9 immagine, 11 grafico
+
+AVVERTENZE
+  * E' calcolo NUMERICO (non simbolico): serve a CONTROLLARE e a capire il
+    risultato; all'esame va scritto il ragionamento (limiti, segno di f', ...).
+  * I numeri vengono riconosciuti quando possibile (1/3, pi/4, sqrt(5), e^2).
+  * Se un limite/zero e' "dubbio" (forme 0/0, oscillazioni, poli) controlla a mano.
+  * Se compare "MemoryError" prova a chiudere altri programmi o a cancellare file.
+  * Se eval non va sulla tua versione: in studio.py modifica la riga "def F(x)".
+  * Verificato su PC con Python 3 (python test_casio.py: 49 test sui temi d'esame);
+    non ho potuto provarlo su una vera fx-CG50.
