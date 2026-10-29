@@ -360,7 +360,7 @@ def app_2022():
     verifica("curva (cos log t, sqrt2/2 sin log t, sqrt2/2 sin log t), t in [1,e^(2pi)]: lunghezza 2 pi", sp.simplify(I_.curva("cos(log(t)), sqrt(2)/2*sin(log(t)), sqrt(2)/2*sin(log(t))", 1, "exp(2*pi)", stampa=False)["lunghezza"]), 2 * pi)
     verifica("r (1+t,2+2t,3+3t) e r^ (1+t,2,3+3t): incidenti", G.posizione_rette("1,2,3", "1,2,3", "1,2,3", "1,0,3", stampa=False)["tipo"], "incidenti")
     St = Studio(x / (1 + x ** 2) - sp.atan(x), x)
-    verifica("f dispari, asintoti y=+-pi/2, strettamente decrescente, nessun estremo (flesso orizzontale in 0)", (sorted({L for _, L in St.asintoti()["orizzontali"]}, key=float), [e[1] for e in St.estremi()]), ([-pi / 2, pi / 2], [0]))
+    verifica("f dispari, asintoti y=+-pi/2, strettamente decrescente, nessun estremo (flesso orizzontale in 0)", (sorted({L for _, L in St.asintoti()["orizzontali"]}, key=float), [(e[0], e[1]) for e in St.estremi()]), ([-pi / 2, pi / 2], [(0, "flesso a tangente orizzontale")]))
     verifica("int_e^(e^2) (log x)^2 dx = 2e^2 - e", sp.simplify(I_.integrale("log(x)^2", "E", "exp(2)", stampa=False)["valore"] - (2 * sp.E ** 2 - sp.E)), 0)
     w = C.analizza(C.parse_c("(1+i)^3/(1-sqrt(3)*i)^4"), stampa=False)
     verifica("z=(1+i)^3/(1-sqrt3 i)^4: arg = pi/12, |z|<1", (w["arg_principale"], w["mod"] < 1), (pi / 12, True))

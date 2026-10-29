@@ -490,9 +490,19 @@ def curva(componenti, t0, t1, stampa=True):
         riga(f"r(t) = {tuple(r)},  t in [{t0}, {t1}]")
         riga(f"r'(t) = {tuple(sp.simplify(c) for c in v)},   |r'(t)| = {vel}")
     zeri = sp.solveset(vel2, t, Interval(t0, t1)) if vel2.has(t) else (S.Reals if vel2 == 0 else S.EmptySet)
-    out["regolare"] = zeri == S.EmptySet
+    if zeri == S.EmptySet or isinstance(zeri, sp.FiniteSet):
+        out["regolare"] = zeri == S.EmptySet
+        nota = ""
+    else:        # equazione trascendentale: verifica numerica del minimo di |r'|^2 su [t0,t1]
+        import numpy as np
+        fv = sp.lambdify(t, vel2, "numpy")
+        ts_ = np.linspace(float(sp.N(t0)), float(sp.N(t1)), 20001)
+        with np.errstate(all="ignore"):
+            mn = float(np.nanmin(np.asarray(fv(ts_) + 0 * ts_, dtype=float)))
+        out["regolare"] = mn > 1e-9
+        nota = f" (verifica numerica: min |r'|^2 ~ {mn:.4g} su [t0,t1])"
     if stampa:
-        riga("REGOLARE (r' != 0 su tutto [t0,t1])" if out["regolare"] else f"NON regolare: r'(t)=0 per t in {zeri}")
+        riga(("REGOLARE (r' != 0 su tutto [t0,t1])" if out["regolare"] else f"NON regolare: r'(t)=0 per t in {zeri}") + nota)
     if len(r) == 3:
         biv = sp.simplify(v.cross(v.diff(t)).dot(v.cross(v.diff(t))))
         zb = sp.solveset(biv, t, Interval(t0, t1)) if biv.has(t) else (S.Reals if biv == 0 else S.EmptySet)
