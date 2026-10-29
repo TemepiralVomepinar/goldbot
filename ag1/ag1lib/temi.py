@@ -156,7 +156,8 @@ def app_11_2_26():
     sol = sp.solveset(t + 2 - t * (sp.log(t) - 1) - 2, t, Interval.open(0, oo))
     verifica("curva (log t, t+2, t(log t-1)) incontra y-z=2 solo per t=e^2", sol, sp.FiniteSet(sp.E ** 2))
     d = G.retta_da_piani("y=e*x", "y-z=2", stampa=False)[0]
-    verifica("r (piani y=ex, y-z=2) parallela a s tangente (direzione (1/e,1,1))", G.posizione_rette("0,0,-2", f"{d[0]},{d[1]},{d[2]}", "1,e+2,0", "1/e,1,1", stampa=False)["tipo"], "parallele (distinte)")
+    dstr = ",".join(str(c).replace("E", "e") for c in d)
+    verifica("r (piani y=ex, y-z=2) parallela a s tangente (direzione (1/e,1,1))", G.posizione_rette("0,0,-2", dstr, "1,e+2,0", "1/e,1,1", stampa=False)["tipo"], "parallele (distinte)")
     St = Studio(exp(-Abs(x)) * sp.sin(x), x)
     verifica("f=e^-|x| sin x e' derivabile in 0 con f'(0)=1", (_tipo_nodo(St, 0), [d["dsx"] for d in St.info if d["c"] == 0]), ("derivabile", [1]))
 
@@ -228,7 +229,10 @@ def app_13_1_25():
     titolo("app 13/1/2025", "limite, z^3=2i, raccordo alpha, G(x), (x^2-1)e^-|x-1|, geometria")
     verifica("lim (3x^2+2x)/(1-e^-x) = 2", lim((3 * x ** 2 + 2 * x) / (1 - exp(-x)), x, 0), 2)
     sol = C.risolvi_equazione("z^3 = 2*i", stampa=False)
-    verifica("z^3=2i: soluzioni sqrt3+i, -2i, -sqrt3+i (i-sqrt3 non e' soluzione)", C.complessi_uguali(sol, [sqrt(3) + sp.I, -2 * sp.I, -sqrt(3) + sp.I]), True)
+    verifica("z^3=2i: 3 soluzioni di modulo 2^(1/3); ne' sqrt3-i ne' i-sqrt3 sono soluzioni (z^3 = 8i != 2i)",
+             (len(sol), all(abs(abs(num(z_)) - 2 ** (1 / 3)) < 1e-9 for z_ in sol),
+              any(abs(num(z_) - num(sqrt(3) - sp.I)) < 1e-9 or abs(num(z_) - num(sp.I - sqrt(3))) < 1e-9 for z_ in sol)),
+             (3, True, False))
     rr = SU.raccordo("1+a*(x^2-1)", "exp(1-x^2)", 1, ["a"], stampa=False)
     verifica("f continua per ogni a, derivabile sse a=-1", (rr["continua"], _valori(rr["derivabile"])), ("sempre (per ogni valore dei parametri)", [-1]))
     verifica("lim (f(x)-cos 2x)/sin(x^2), f ~ 1-x^2: 1", lim((1 - x ** 2 - sp.cos(2 * x)) / sp.sin(x ** 2), x, 0), 1)
