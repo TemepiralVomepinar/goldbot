@@ -12,7 +12,7 @@ import sympy as sp
 from sympy import FiniteSet, Interval, Rational, S, Union, oo
 from sympy.calculus.util import continuous_domain
 
-from .util import OUT_DIR, num, ordina, riga, s, sezione, uguali, x as X
+from .util import OUT_DIR, con_timeout, num, ordina, riga, s, sezione, uguali, x as X
 
 
 # ======================================================== preparazione ========
@@ -31,18 +31,23 @@ def realifica(expr, var=X):
     return expr.replace(cond, val)
 
 
+def _solveset(e, var, dominio, secondi=8):
+    """solveset con timeout: se sympy non conclude, solleva Timeout (gestito dal chiamante)."""
+    return con_timeout(lambda: sp.solveset(e, var, dominio), secondi)
+
+
 def _zeri_reali(e, var):
     e = sp.simplify(e)
     if e.is_number:
         return []
     try:
-        sol = sp.solveset(e, var, S.Reals)
+        sol = _solveset(e, var, S.Reals)
         if isinstance(sol, FiniteSet):
             return [p for p in sol if p.is_real]
     except Exception:
         pass
     try:
-        return [r for r in sp.Poly(e, var).real_roots()]
+        return [r for r in con_timeout(lambda: sp.Poly(e, var).real_roots(), 8)]
     except Exception:
         return []
 
@@ -183,7 +188,7 @@ class Tratto:
         esatte = None
         for cand in candidati:
             try:
-                sol = sp.solveset(cand, self.var, J)
+                sol = _solveset(cand, self.var, J)
             except Exception:
                 continue
             if isinstance(sol, FiniteSet) or sol == S.EmptySet:
@@ -442,7 +447,7 @@ class Studio:
                     J = Interval.open(pz["p"], pz["q"])
                     sol = None
                     try:
-                        sol = sp.solveset(T.e, var, J)
+                        sol = _solveset(T.e, var, J)
                     except Exception:
                         pass
                     if isinstance(sol, FiniteSet) and len(sol) == 1:

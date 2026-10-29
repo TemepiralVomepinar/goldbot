@@ -119,3 +119,25 @@ def parse(espr, **extra):
 
 def ordina(valori):
     return sorted(valori, key=lambda v: float(sp.N(v)))
+
+
+class Timeout(Exception):
+    pass
+
+
+def con_timeout(fun, secondi=10):
+    """Esegue fun() interrompendola dopo `secondi` (solo Unix, thread principale); altrimenti la esegue senza limite."""
+    import signal
+
+    def gestore(signum, frame):
+        raise Timeout()
+    try:
+        vecchio = signal.signal(signal.SIGALRM, gestore)
+        signal.alarm(secondi)
+    except (ValueError, AttributeError):
+        return fun()
+    try:
+        return fun()
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, vecchio)
