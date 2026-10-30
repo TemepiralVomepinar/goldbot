@@ -1,0 +1,290 @@
+ESEMPI SVOLTI CON I PROGRAMMI PER CASIO fx-CG50
+=================================================
+Le schermate qui sotto sono uscite REALI dei programmi (provate su PC con gli
+stessi input). Sulla calcolatrice l'aspetto e' lo stesso, solo piu' compresso.
+
+COME SI AVVIA UN PROGRAMMA
+  MENU -> Python -> scegli il file (STUDIO, LIMITI, COMPL, ESTREMI, TAYLOR, TEORIA)
+  -> [EXE] (oppure F1 Esegui). Compare il menu numerato: scrivi il numero e [EXE].
+  Poi il programma chiede i dati uno alla volta: scrivi e premi [EXE].
+  "[EXE]" a fine schermata = pausa: premi [EXE] per tornare al menu.
+  0 = esci dal programma.
+
+COME SCRIVERE LE FUNZIONI
+  potenza  x^2 oppure x**2        radice  sqrt(x)   cbrt(x)
+  e^x      exp(x)                  logaritmo ln: log(x) oppure ln(x)
+  seno/coseno/tangente  sin cos tan  (anche sen, tg)    arctg: atan(x) / arctg(x)
+  modulo   abs(x)                  pi, e   sono le costanti
+  Parentesi sempre complete: 1/(2*x+1), NON 1/2x+1.  Moltiplicazione: scrivi *.
+  Nelle successioni la variabile e' n; nei complessi z (unita' immaginaria: i).
+
+REGOLA D'ORO
+  I programmi danno RISULTATI NUMERICI + riconoscimento (frazioni, pi, radici,
+  e^k). Servono per CAPIRE la risposta e per CONTROLLARE i conti; la
+  giustificazione scritta (derivata, limiti notevoli, teoremi) la scrivi tu.
+
+==========================================================================
+1) STUDIO.PY - studio di funzione
+==========================================================================
+Appena parte chiede f(x)=. Poi il menu:
+ 1 tabella  2 dominio  3 zeri/segno  4 f',f'',tangente  5 estremi/monotonia
+ 6 flessi/convessita'  7 limiti+asintoti  8 non derivabilita'
+ 9 min/max/immagine  10 f(x)=c: n.soluz.  11 grafico  12 cambia f(x)
+
+--- Esempio 1.1: f(x) = x e^(-x)
+ f(x)= x*exp(-x)
+ scelta: 5   (estremi/monotonia)   da: -3 [EXE]   a: 6 [EXE]
+   punti stazionari: ['1']
+   MAX x=1 f=0.367879 (=e^-1)
+   crescente in (-3, 1)
+   decrescente in (1, 6)
+ scelta: 7   (limiti)   x0: oo
+   limite: L = 0 (=0)
+   asintoto orizzontale y= 0
+ scelta: 7   x0: -oo
+   limite: -inf (overflow)
+   (x e^(-x) con x=-1e4 esce dai numeri della calcolatrice: n.d.; il
+    programma lo segnala come -inf. A mano: x -> -oo, e^(-x) -> +oo, quindi -oo)
+ scelta: 6   (flessi)   da -3, a 6
+   flessi (f''=0): ['2']   x=2 f=0.27067
+   concava in (-3, 2)   convessa in (2, 6)
+ scelta: 9   (min/max/immagine)   da -3, a 6
+   min ~ -60.2566 in x~-3     <- e' il bordo della finestra: significa che f
+   max ~ 0.367879 (=e^-1) in x~1.0005   non ha minimo (inf = -oo)
+ => IMMAGINE: (-oo, 1/e].   Da scrivere a mano: f'=(1-x)e^-x, f''=(x-2)e^-x.
+
+--- Esempio 1.2: f(x) = sqrt(x^2-1)/(x-2)   (dominio e polo)
+ f(x)= sqrt(x^2-1)/(x-2)
+ scelta: 2   (dominio)   da: [EXE] (accetta -10)   a: 7 [EXE]
+   DEF da -10 a -1
+   n.d. da -1 a 1
+   DEF da 1 a 7
+   => dominio (-oo,-1] U [1,2) U (2,+oo)   (x=2 annulla il denominatore:
+      il programma vede un buco troppo stretto per segnarlo, controllalo tu)
+ scelta: 7   x0: 2
+   sx ... -> limite sx : -inf
+   dx ... -> limite dx : +inf
+   => asintoto verticale x=2, con segni opposti ai due lati.
+ scelta: 7   x0: oo   =>  L = 1, asintoto orizzontale y=1 (a +oo)
+
+--- Esempio 1.3: f(x) = |x|^(4/3) * cbrt(2-x)   (punto di tangente verticale)
+ f(x)= abs(x)**(4/3)*cbrt(2-x)
+ scelta: 5   da -3  a 4
+   punti stazionari: ['0', '8/5']
+   MIN x=0 f=0          MAX x=8/5 f=1.37884
+   decrescente in (-3, 0)  crescente in (0, 8/5)  decrescente in (8/5, 4)
+ scelta: 8   (non derivabilita')   x0: 2
+   deriv. dx ~ -1169 -25198 -542883   (cresce senza limite)
+   deriv. sx ~ -1169 -25198 -542883
+   TG VERTICALE (flesso se stesso segno)
+   => in x=2 la derivata va a -oo da entrambi i lati: flesso a tangente verticale.
+ In x=0 f'(0)=0 (esponente 4/3>1): derivabile, e' un minimo.
+
+--- Esempio 1.4: quante soluzioni ha  ln|x-1| + x^2 + x = 0 ?
+ f(x)= log(abs(x-1))+x**2+x
+ scelta: 10   da -3  a 3   c: 0
+   n. soluzioni: 3
+     x= 0
+     x= 0.683803
+     x= 1.09944
+ => 3 zeri (uno e' x=0). Per la risposta scritta: studia monotonia (f' =
+    1/(x-1)+2x+1) e usa il teorema degli zeri nei tratti monotoni.
+
+==========================================================================
+2) LIMITI.PY - limiti, successioni, ordini di infinitesimo
+==========================================================================
+Menu: 1 lim f(x)  2 successione a_n  3 ricorrenza  4 rapporto/radice
+      5 ordine di infinitesimo  6 ordine all'infinito  7 soglia di a
+      8 limite con parametro  9 confronto f/g
+
+--- Esempio 2.1: limite notevole  lim (1-cos x)/x^2 per x->0
+ scelta: 1   f(x)= (1-cos(x))/x**2   x0: 0
+   sx x=-0.1 f=0.49958347 ... x=-1e-05 f=0.50000004
+   -> limite sx : L = 0.5 (=1/2)
+   -> limite dx : L = 0.5 (=1/2)
+ (l'ultimo valore, x=1e-7, e' 0.4996: errore di cancellazione, e' normale;
+  guarda il tratto stabile)
+
+--- Esempio 2.2: forma oo-oo   lim x*(sqrt(x^2+1)-x) per x->+oo
+ scelta: 1   f(x)= x*(sqrt(x**2+1)-x)   x0: oo
+   x=100 f=0.4999875   x=10000 f=0.50000001   x=1e6 f=0.50000381
+   x=1e8 f=0              <- cancellazione numerica, ignoralo
+   -> limite : L = 0.500004 (=0.500004)
+ => il limite e' 1/2 (valori stabili 0.49999..0.50000). A mano: razionalizza
+    x/(sqrt(x^2+1)+x) -> 1/2.
+
+--- Esempio 2.3: limite con e^k    lim (1+2/x)^(3x), x->+oo
+ scelta: 1   f(x)= (1+2/x)**(3*x)   x0: oo
+   x=100 f=380.23451  x=1e4 f=403.18684  x=1e6 f=403.42637  x=1e8 f=403.42878
+   -> limite : L = 403.429 (=e^6)
+
+--- Esempio 2.4: successione  a_n = (1+1/n)^n
+ scelta: 2   a_n= (1+1/n)**n   n0: 1
+   primi: ['2', '2.25', '2.3704', '2.4414', '2.4883', '2.5216']
+   n=10 a_n=2.5937425 ... n=1000000 a_n=2.7182805
+   limite: L = 2.71828 (=2.71828)         (e)
+   monotona: STRETT. CRESC.
+   max(primi 3000)=2.71783 per n=3000      min(primi 3000)=2 per n=1
+   n pari -> 193/71 ; n dispari -> 193/71 ; stesso valore
+ => limite e, sup=e non assunto (niente massimo), min=2 per n=1.
+
+--- Esempio 2.5: n^2 / 2^n  (gerarchia degli infiniti)
+ scelta: 2   a_n= n**2/2**n   n0: 1
+   primi: ['0.5', '1', '1.125', '1', '0.78125', '0.5625']
+   limite: L = 0
+   monotona: no (non monotona)
+   max(primi 3000)=9/8 per n=3     min(primi 3000)=0 per n=1096
+   (lo "0" e' solo un underflow: a_n e' sempre >0, quindi inf=0 NON e' un min)
+ => a_n -> 0 (esponenziale batte potenza), max = 9/8 per n=3.
+
+--- Esempio 2.6: ricorrenza  a_(n+1) = sqrt(2 + a_n), a_1 = 1
+ scelta: 3   g(a)= sqrt(2+a)   a_1= 1
+   a1..a6: ['1', '1.73205', '1.93185', '1.98289', '1.99572', '1.99893']
+   a_60 ~ 2         andamento: crescente
+   punti fissi L=g(L): ['2', '2']        (la radice -1 non e' accettabile: sqrt>=0)
+ => a_n crescente, limitata da 2, converge a L=2 (L=sqrt(2+L) => L^2-L-2=0).
+    Da dimostrare a mano per induzione: 1<=a_n<=2 e a_n<a_(n+1).
+
+--- Esempio 2.7: PARAMETRO   lim x^2 (e^(a/x) - a/x - cos(1/x)) = 3, x->+oo
+ scelta: 8   f(x,a)= x**2*(exp(a/x)-a/x-cos(1/x))   x0: oo
+   valore V: 3   a da: -6   a a: 6
+   a tali che limite = 3:
+     a ~ -2.23607 (=-sqrt(5))  L(a)= 3
+     a ~  2.23607 (=sqrt(5))   L(a)= 3
+   L(-6) ~ 18.5    L(0) ~ 0.5    L(6) ~ 18.5
+ => il limite vale (a^2+1)/2 (Taylor: e^t=1+t+t^2/2, cos s=1-s^2/2):
+    (a^2+1)/2 = 3  =>  a = +-sqrt(5).
+
+--- Esempio 2.8: ordine di infinitesimo e soglia
+ scelta: 5   f(x)= exp(2*x)-1-2*x   x0: 0
+   lato dx : p~ 2.010 2.005 2.002      lato sx : p~ 1.990 1.995 1.998
+   f ~ c*(x-x0)^p con p=2, c~2 (=2)         => f ~ 2x^2
+ scelta: 5   f(x)= exp(2*x**2)-cos(2*x)   x0: 0
+   f ~ c*(x-x0)^p con p=2, c~4 (=4)         => f ~ 4x^2
+ scelta: 7   N(x)= 1-cos(x)   D(x)= x**2   x0: 0
+   N ~ x^2 , D ~ x^2      a < 1: limite 0 ... a > 1: limite infinito
+   (per esercizi del tipo "per quali a il limite di N/D^a e' finito")
+
+==========================================================================
+3) COMPL.PY - numeri complessi
+==========================================================================
+Menu: 1 forma  2 operazioni/potenze  3 radici z^n=w  4 az^2+bz+c=0
+      5 equazione in z, conj, |z|   6 regione del piano di Gauss
+
+--- Esempio 3.1: equazione  z^2 = 2i * conj(z)
+ scelta: 5    E(z)= z**2-2*i*conj(z)      (porta tutto a sinistra: A-B)
+   soluzioni trovate: 4
+   -1.73205+1i   |z|=2 arg=5*pi/6
+   0-2i          |z|=2 arg=-pi/2
+   0+0i          |z|=0 arg=0
+   1.73205+1i    |z|=2 arg=pi/6
+ => z=0, z=-2i, z=+-sqrt(3)+i  (sono 0 piu' 3 punti a 120 gradi sulla
+    circonferenza |z|=2). A mano: modulo => |z|(|z|-2)=0.
+
+--- Esempio 3.2: radici terze di w = -8i
+ scelta: 3    Re = 0   Im = -8   n: 3
+   |w|=8 arg w=-1.5708 (=-pi/2) -> 3 radici
+   raggio 2, angoli (arg w + 2k*pi)/n
+   k=0: 1.73205-1i      = 2 * e^(i*-pi/6)
+   k=1: 0+2i            = 2 * e^(i*pi/2)
+   k=2: -1.73205-1i     = 2 * e^(i*7*pi/6)
+ => vertici di un triangolo equilatero inscritto in |z|=2.
+
+--- Esempio 3.3: equazione  z^2 = conj(z)
+ scelta: 5    E(z)= z**2-conj(z)
+   soluzioni trovate: 4
+   -0.5-0.866025i |z|=1 arg=-2*pi/3
+   -0.5+0.866025i |z|=1 arg=2*pi/3
+   0+0i
+   1+0i
+ => z=0 e le tre radici cubiche di 1 (|z|^2=|z| => |z|=0 o 1, poi z^3=1).
+
+--- Esempio 3.4: regione  |z+1| < |z-1|
+ scelta: 6    cond= abs(z+1)<abs(z-1)    raggio finestra: 3 [EXE]
+   mappa 31x15: '#' = punti della regione. Qui e' tutta la meta' sinistra
+   (colonne a sinistra della barra '|' = asse y)  ->  Re z < 0.
+   punto da testare:  1,0   =>  1+0i NON appartiene
+                     -1,0   =>  -1+0i APPARTIENE
+ Altre condizioni:  1<=abs(z)<=2 and 0<=arg(z)<=pi/3   (settore di corona)
+                    re(z**2)>0
+
+==========================================================================
+4) ESTREMI.PY - sup/inf, insiemi, induzione
+==========================================================================
+Menu: 1 sup/inf di {a_n}  2 insieme da condizione  3 soluzioni g(x)=0
+      4 max/min di f su [a,b]  5 test induzione  6 famiglia di intervalli
+
+--- Esempio 4.1: a_n = n/(2n+1)
+ scelta: 1   a_n= n/(2*n+1)   n0: 1
+   limiti (n pari/dispari ->): 1/2 ; 1/2
+   SUP = 1/2  (limite, NON assunto: niente max)
+   INF = MIN = 1/3  per n=1
+ => sup=1/2 non e' massimo; min=1/3.  (a mano: a_n=1/2-1/(2(2n+1)) crescente)
+
+--- Esempio 4.2: a_n = (-1)^n + 1/n
+ scelta: 1   a_n= (-1)**n+1/n   n0: 1
+   limiti (n pari/dispari ->): 1 ; -1
+   SUP = MAX = 3/2  per n=2
+   INF = -1  (limite, NON assunto: niente min)
+   pari: max=3/2 min=1.00025      dispari: max=0 min=-0.99975
+ => max=3/2 (n=2), inf=-1 non minimo, sup dei dispari=0.
+
+--- Esempio 4.3: insieme  { x : x^2-2x-3<0 e |x|>=1 }
+ scelta: 2   cond= x**2-2*x-3<0 and abs(x)>=1   da -10  a 10
+   [1 , 3)
+   inf ~ 1  sup ~ 3
+ => A=[1,3): min=1 (chiuso), sup=3 non massimo.
+    (se compare un estremo uguale a -10 o 10 l'insieme e' illimitato)
+
+--- Esempio 4.4: induzione  2^n >= n^2 per n>=4
+ scelta: 5   P(n)= 2**n>=n**2   n0: 4   fino a: 60
+   P(n) vera per n=4..60 (non e' una dimostrazione!)
+ (con n0=3 risponde FALSA per n=[3]: il caso base e' n=4.)
+ Dimostrazione a mano: base n=4: 16>=16. Passo: 2^(n+1)=2*2^n>=2n^2>=(n+1)^2
+ perche' n^2>=2n+1 per n>=3.
+
+==========================================================================
+5) TAYLOR.PY - derivate, punti critici, Taylor con resto
+==========================================================================
+Menu: 1 derivate f',..,f(5)  2 classifica punto critico
+      3 polinomio di Taylor T_n  4 notevoli + resto di Lagrange  5 tabella
+
+--- Esempio 5.1: cos x - 1 + x^2/2  in x0 = 0
+ scelta: 2   f(x)= cos(x)-1+x**2/2   x0: 0
+   prima derivata non nulla: ordine 4, valore 0.99985
+   => MINIMO LOCALE
+   f(x) - f(x0) ~ 1/24 * (x-x0)^4
+ (infatti cos x = 1 - x^2/2 + x^4/24 - ...)
+
+--- Esempio 5.2: sin x - x + x^3/6  in x0 = 0
+ scelta: 2   f(x)= sin(x)-x+x**3/6   x0: 0
+   prima derivata non nulla: ordine 5, valore 0.998801
+   => NESSUN estremo (flesso a tg orizzontale)
+   f(x) - f(x0) ~ 1/120 * (x-x0)^5
+ Regola: primo ordine non nullo PARI => estremo (c>0 min, c<0 max);
+         DISPARI => nessun estremo.
+
+--- Esempio 5.3: e^x approssimato con resto di Lagrange
+ scelta: 4   funzione: 1 (exp)   x: 0.1   ordine n: 2
+   T_2(0.1) = 1.105
+   f(0.1)   = 1.105170918
+   errore vero = 0.000171
+   resto Lagrange <= 0.000184
+   => 1.1048158 < f < 1.1051842
+ (il resto e' e^xi * x^3/3! con xi in (0, 0.1), maggiorato con e^0.1 * 0.1^3/6)
+
+==========================================================================
+6) TEORIA.PY
+==========================================================================
+ Scrivi 1..9, A o B (derivate, limiti, infiniti, studio, complessi, teoremi,
+ Taylor, integrali, EDO, curve/geometria, insiemi/sup-inf) e leggi il
+ formulario. [EXE] = pagina successiva.
+
+AVVERTENZE (valgono per tutti)
+ - "n.d." vicino a una singolarita' puo' essere un asintoto verticale
+   (overflow), non un buco: controlla sempre con 'limiti'.
+ - Un massimo/minimo "al bordo della finestra" significa: allarga la finestra
+   o guarda il limite (potrebbe essere +-infinito).
+ - Per x molto grande (1e8) le sottrazioni perdono cifre: fidati dei valori
+   stabili, non dell'ultimo.
+ - Il programma trova numeri; la risposta all'esame va motivata a mano.

@@ -196,7 +196,7 @@ def classifica():
             fct = 1
             for j in range(2, k + 1):
                 fct *= j
-            print("f(x) - f(x0) ~ %s * (x-x0)^%d" % (ric(d / fct, 1e-3), k))
+            print("f(x) - f(x0) ~ %s * (x-x0)^%d" % (ric(d / fct, 2e-3 * abs(d / fct)), k))
             return
     print("derivate fino a 5 nulle: serve ordine maggiore")
 

@@ -57,3 +57,5 @@ AVVERTENZE
   * Se eval non va sulla tua versione: in studio.py modifica la riga "def F(x)".
   * Verificato su PC con Python 3 (python test_casio.py: 49 test sui temi d'esame);
     non ho potuto provarlo su una vera fx-CG50.
+
+ESEMPI SVOLTI: vedi ESEMPI.txt (schermate reali + passaggi da fare sulla calcolatrice).

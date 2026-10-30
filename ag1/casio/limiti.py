@@ -165,6 +165,13 @@ def stima(vs):
     b = ys[-2]
     if abs(a) > 1e5 and abs(a) > abs(b) * 1.5:
         return "+inf" if a > 0 else "-inf"
+    for i in range(1, len(ys) - 2):
+        # primo tratto stabile (3 valori consecutivi): evita il crollo finale per cancellazione
+        if abs(ys[i] - ys[i + 1]) < 1e-5 * max(1.0, abs(ys[i])) and abs(ys[i + 1] - ys[i + 2]) < 1e-5 * max(1.0, abs(ys[i])):
+            j = i + 2
+            while j + 1 < len(ys) and abs(ys[j] - ys[j + 1]) < 1e-5 * max(1.0, abs(ys[j])):
+                j += 1
+            return "L = " + fr(ys[j])
     for i in range(len(ys) - 2, 0, -1):
         if abs(ys[i] - ys[i + 1]) < 1e-5 * max(1.0, abs(ys[i])):
             return "L = " + fr(ys[i + 1] if i == len(ys) - 2 else ys[i])
@@ -296,6 +303,8 @@ def ordine_in(f, x0, lato):
 def ordine():
     f = mk(input("f(x)= "))
     x0 = leggi("x0", 0.0)
+    cs = []
+    pr = None
     for lato in (1, -1):
         o = ordine_in(f, x0, lato)
         if o is None:
@@ -303,8 +312,16 @@ def ordine():
             continue
         r, pr, c = o
         print("lato", "dx" if lato > 0 else "sx", ": p~", ["%.3f" % t for t in r])
-        print("  f ~ c*|x-x0|^p con p=%g, c~%s" % (pr, "n.d." if c is None else ric(c, 1e-3)))
+        cs.append(c)
+    if pr is not None:
+        c = cs[0]
+        if len(cs) == 2 and cs[0] is not None and cs[1] is not None and cs[0] * cs[1] > 0:
+            c = (cs[0] + cs[1]) / 2.0      # la media cancella il termine di ordine successivo
+        print("f ~ c*(x-x0)^p con p=%g, c~%s" % (pr, "n.d." if c is None else fr3(c)))
     print("(se p e' vicino a un intero/mezzo: ok)")
+
+def fr3(c):
+    return "%.4g (=%s)" % (c, ric(c, 3e-3))
 
 def ordine_inf():
     f = mk(input("f(x)= "))
